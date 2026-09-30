@@ -1,0 +1,61 @@
+import { LayoutDashboard, ListTodo, PlusCircle, User, LogOut } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+
+const menuItems = [
+  { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+  { label: 'My Tasks', to: '/tasks', icon: ListTodo },
+  { label: 'Add Task', to: '/add-task', icon: PlusCircle },
+  { label: 'Profile', to: '/profile', icon: User },
+];
+
+export default function Sidebar({ onLogout }) {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    onLogout();
+    navigate('/');
+  };
+
+  return (
+    <aside className="flex h-full w-full flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-soft">
+      <div>
+        <div className="mb-8 flex items-center gap-3 px-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue text-lg font-bold text-white">
+            S
+          </div>
+          <div>
+            <p className="text-lg font-bold text-slate-900">StudentTask</p>
+          </div>
+        </div>
+
+        <nav className="space-y-2">
+          {menuItems.map(({ label, to, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${
+                  isActive
+                    ? 'bg-brand-blue text-white shadow-md'
+                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                }`
+              }
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-6 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+      >
+        <LogOut size={18} />
+        <span>Logout</span>
+      </button>
+    </aside>
+  );
+}

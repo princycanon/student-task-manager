@@ -1,0 +1,219 @@
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { AlertCircle, Eye, EyeOff, GraduationCap, LockKeyhole, UserRound } from 'lucide-react';
+import Button from '../components/Button';
+
+export default function Register({ onRegister, isLoggedIn }) {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  if (isLoggedIn) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validate = () => {
+    const nextErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!form.fullName.trim()) nextErrors.fullName = 'Full name is required.';
+    if (!form.email.trim()) nextErrors.email = 'Email is required.';
+    else if (!emailRegex.test(form.email)) nextErrors.email = 'Enter a valid email address.';
+    if (!form.password) nextErrors.password = 'Password is required.';
+    else if (form.password.length < 6) nextErrors.password = 'Password must be at least 6 characters.';
+    if (!form.confirmPassword) nextErrors.confirmPassword = 'Please confirm your password.';
+    else if (form.confirmPassword !== form.password) nextErrors.confirmPassword = 'Passwords do not match.';
+
+    return nextErrors;
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const nextErrors = validate();
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length === 0) {
+      onRegister();
+      navigate('/login');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="container-shell grid min-h-screen items-center gap-8 py-10 lg:grid-cols-2">
+        <div className="hidden rounded-[30px] border border-slate-200 bg-white p-8 shadow-soft lg:flex lg:flex-col lg:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-purple text-white">
+              <GraduationCap size={26} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">StudentTask</p>
+            </div>
+          </div>
+
+          <div>
+            <h1 className="max-w-md text-4xl font-bold tracking-tight text-slate-900">
+              Build a smarter study routine from day one.
+            </h1>
+            <p className="mt-4 max-w-md text-lg text-slate-600">
+              Organize tasks, meet deadlines, and focus on what matters most with a workspace designed for students.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div className="flex items-center justify-between text-sm text-slate-500">
+              <span>Study momentum</span>
+              <span className="rounded-full bg-purple-100 px-2 py-1 text-xs font-semibold text-purple-700">Ready</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+          <div className="mb-6">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-brand-purple">Create account</p>
+            <h2 className="mt-3 text-3xl font-bold text-slate-900">Register your profile</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="fullName" className="mb-2 block text-sm font-medium text-slate-700">
+                Full Name
+              </label>
+              <div className="relative">
+                <UserRound className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  value={form.fullName}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-slate-800 outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+                  placeholder="Alex Johnson"
+                />
+              </div>
+              {errors.fullName && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle size={14} />
+                  {errors.fullName}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  @
+                </span>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-slate-800 outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+                  placeholder="name@example.com"
+                />
+              </div>
+              {errors.email && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle size={14} />
+                  {errors.email}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
+                Password
+              </label>
+              <div className="relative">
+                <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-12 pr-12 text-slate-800 outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+                  placeholder="Minimum 6 characters"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.password && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle size={14} />
+                  {errors.password}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-slate-700">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-12 pr-12 text-slate-800 outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+                  placeholder="Confirm password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  aria-label="Toggle confirm password visibility"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+                  <AlertCircle size={14} />
+                  {errors.confirmPassword}
+                </div>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full">
+              Create Account
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-slate-600">
+            Already have an account?{' '}
+            <Link to="/login" className="font-semibold text-brand-blue hover:text-blue-700">
+              Login
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

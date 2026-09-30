@@ -1,0 +1,155 @@
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Tasks from './pages/Tasks';
+import AddTask from './pages/AddTask';
+import EditTask from './pages/EditTask';
+import Profile from './pages/Profile';
+import mockTasks from './data/mockTasks';
+
+const TASK_KEY = 'studentTaskManager.tasks';
+const PROFILE_KEY = 'studentTaskManager.profile';
+const AUTH_KEY = 'studentTaskManager.auth';
+
+const defaultProfile = {
+  fullName: 'Alex Johnson',
+  email: 'alex@example.com',
+  course: 'Computer Science',
+  year: '3rd Year',
+};
+
+const getInitialTasks = () => {
+  try {
+    const stored = localStorage.getItem(TASK_KEY);
+    return stored ? JSON.parse(stored) : mockTasks;
+  } catch {
+    return mockTasks;
+  }
+};
+
+const getInitialProfile = () => {
+  try {
+    const stored = localStorage.getItem(PROFILE_KEY);
+    return stored ? JSON.parse(stored) : defaultProfile;
+  } catch {
+    return defaultProfile;
+  }
+};
+
+function ProtectedRoute({ isLoggedIn, children }) {
+  const location = useLocation();
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
+export default function App() {
+  const [tasks, setTasks] = useState(getInitialTasks);
+  const [profile, setProfile] = useState(getInitialProfile);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem(AUTH_KEY) === 'true');
+
+  useEffect(() => {
+    localStorage.setItem(TASK_KEY, JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+  }, [profile]);
+
+  useEffect(() => {
+    localStorage.setItem(AUTH_KEY, String(isLoggedIn));
+  }, [isLoggedIn]);
+
+  const taskStats = useMemo(() => {
+    const total = tasks.length;
+    const pending = tasks.filter((task) => task.status === 'Pending').length;
+    const inProgress = tasks.filter((task) => task.status === 'In Progress').length;
+    const completed = tasks.filter((task) => task.status === 'Completed').length;
+
+    return { total, pending, inProgress, completed };
+  }, [tasks]);
+
+  const addTask = (task) => {
+    setTasks((prev) => [{ id: Date.now(), ...task }, ...prev]);
+  };
+
+  const updateTask = (id, updatedTask) => {
+    setTasks((prev) =>
+      prev.map((task) => (task.id === Number(id) ? { ...task, ...updatedTask } : task))
+    );
+  };
+
+  const deleteTask = (id) => {
+    setTasks((prev) => prev.filter((task) => task.id !== Number(id)));
+  };
+
+  const handleLogin = () => setIsLoggedIn(true);
+  const handleLogout = () => setIsLoggedIn(false);
+  const handleRegister = () => setIsLoggedIn(false);
+
+  const handleProfileUpdate = (newProfile) => {
+    setProfile(newProfile);
+  };
+
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login onLogin={handleLogin} isLoggedIn={isLoggedIn} />} />
+      <Route
+        path="/register"
+        element={<Register onRegister={handleRegister} isLoggedIn={isLoggedIn} />}
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <Dashboard tasks={tasks} stats={taskStats} profile={profile} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/tasks"
+        element={
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <Tasks tasks={tasks} onDelete={deleteTask} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/add-task"
+        element={
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <AddTask onAddTask={addTask} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/tasks/edit/:id"
+        element={
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <EditTask tasks={tasks} onUpdateTask={updateTask} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <Profile profile={profile} onProfileUpdate={handleProfileUpdate} onLogout={handleLogout} />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}

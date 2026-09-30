@@ -1,0 +1,76 @@
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Menu, X, GraduationCap } from 'lucide-react';
+import { useState } from 'react';
+
+const siteLinks = [
+  { label: 'Home', to: '/' },
+  { label: 'Features', to: '/#features' },
+  { label: 'How It Works', to: '/#how-it-works' },
+  { label: 'About', to: '/#about' },
+  { label: 'Login', to: '/login' },
+];
+
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+
+  const handleLinkClick = () => setOpen(false);
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+      <div className="container-shell flex items-center justify-between py-4">
+        <Link to="/" className="flex items-center gap-3" aria-label="StudentTask home">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-blue to-brand-purple text-white shadow-md">
+            <GraduationCap size={20} />
+          </div>
+          <div>
+            <p className="text-lg font-bold tracking-tight text-slate-900">StudentTask</p>
+          </div>
+        </Link>
+
+        <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex">
+          {siteLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={`transition hover:text-brand-blue ${
+                location.pathname === link.to ? 'text-brand-blue' : ''
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link to="/register" className="primary-btn ml-2">
+            Get Started
+          </Link>
+        </nav>
+
+        <div className="md:hidden">
+          <button
+            type="button"
+            aria-label="Toggle mobile menu"
+            onClick={() => setOpen((prev) => !prev)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700"
+          >
+            {open ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+      </div>
+
+      {open && (
+        <div className="border-t border-slate-200 bg-white md:hidden">
+          <nav className="container-shell flex flex-col gap-3 py-4 text-sm font-medium text-slate-700">
+            {siteLinks.map((link) => (
+              <Link key={link.to} to={link.to} onClick={handleLinkClick} className="py-2">
+                {link.label}
+              </Link>
+            ))}
+            <Link to="/register" onClick={handleLinkClick} className="primary-btn mt-2">
+              Get Started
+            </Link>
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+}

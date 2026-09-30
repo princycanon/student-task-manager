@@ -1,0 +1,119 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, Plus, XCircle } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
+import TaskCard from '../components/TaskCard';
+import Button from '../components/Button';
+
+export default function Tasks({ tasks, onDelete, onLogout }) {
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('Newest');
+
+  const filteredTasks = useMemo(() => {
+    const normalized = [...tasks].filter((task) => {
+      const matchesSearch =
+        task.title.toLowerCase().includes(search.toLowerCase()) ||
+        task.subject.toLowerCase().includes(search.toLowerCase());
+
+      const matchesStatus = statusFilter === 'All' ? true : task.status === statusFilter;
+      const matchesPriority = priorityFilter === 'All' ? true : task.priority === priorityFilter;
+
+      return matchesSearch && matchesStatus && matchesPriority;
+    });
+
+    normalized.sort((a, b) => {
+      if (sortBy === 'Oldest') return a.id - b.id;
+      if (sortBy === 'Due Date') return new Date(a.dueDate) - new Date(b.dueDate);
+      if (sortBy === 'Priority') return ['High', 'Medium', 'Low'].indexOf(b.priority) - ['High', 'Medium', 'Low'].indexOf(a.priority);
+      return b.id - a.id;
+    });
+
+    return normalized;
+  }, [tasks, search, statusFilter, priorityFilter, sortBy]);
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="container-shell py-6 lg:py-8">
+        <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+          <div className="hidden lg:block">
+            <Sidebar onLogout={onLogout} />
+          </div>
+
+          <main className="space-y-6">
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-blue">Task overview</p>
+                  <h1 className="mt-2 text-3xl font-bold text-slate-900">My Tasks</h1>
+                </div>
+                <Link to="/add-task" className="primary-btn">
+                  <span className="inline-flex items-center gap-2">
+                    <Plus size={18} />
+                    Add Task
+                  </span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+              <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search tasks..."
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-slate-800 outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100">
+                  <option value="All">Status: All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
+
+                <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100">
+                  <option value="All">Priority: All</option>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                </select>
+
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100">
+                  <option value="Newest">Newest</option>
+                  <option value="Oldest">Oldest</option>
+                  <option value="Due Date">Due Date</option>
+                  <option value="Priority">Priority</option>
+                </select>
+              </div>
+            </div>
+
+            {filteredTasks.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-soft">
+                <XCircle className="mx-auto text-slate-400" size={40} />
+                <h3 className="mt-4 text-xl font-semibold text-slate-900">No tasks found.</h3>
+                <p className="mt-2 text-slate-600">Create your first task to get started.</p>
+                <div className="mt-6">
+                  <Link to="/add-task" className="primary-btn">
+                    Add New Task
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="grid gap-5 lg:grid-cols-2">
+                {filteredTasks.map((task) => (
+                  <TaskCard key={task.id} task={task} onDelete={onDelete} />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}
